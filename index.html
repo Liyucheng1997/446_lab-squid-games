@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>童年淘汰赛 · 课间十分钟</title>
+<style>
+  :root { --chalk: #f6f2e4; --yellow: #ffe98a; --board: #2c463a; --wood: #a8733c; --kai: "KaiTi","STKaiti","楷体","Microsoft YaHei",serif; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1b1512; font-family: "Microsoft YaHei", "PingFang SC", sans-serif; color: var(--chalk); user-select: none; -webkit-user-select: none; touch-action: none; }
+  #c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  #vignette { position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity .15s; box-shadow: inset 0 0 180px 40px rgba(255, 30, 10, .65); }
+  #vignette.on { opacity: 1; }
+  .shake { animation: shake .3s; }
+  @keyframes shake { 20% { transform: translate(-9px, 4px); } 40% { transform: translate(8px, -5px); } 60% { transform: translate(-5px, 3px); } 80% { transform: translate(4px, -2px); } }
+
+  #hud { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: flex-start; padding: 14px 18px; pointer-events: none; gap: 12px; }
+  #hud > div { background: rgba(30, 44, 37, .78); border: 2px solid rgba(246, 242, 228, .55); border-radius: 12px; padding: 8px 14px; backdrop-filter: blur(4px); }
+  #hud.hide { display: none; }
+  #round { font-family: var(--kai); font-size: 22px; font-weight: bold; color: var(--yellow); }
+  #info { font-size: 14px; margin-top: 3px; opacity: .92; min-height: 18px; }
+  #hud-c { text-align: center; min-width: 150px; }
+  #timer { font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+  #timer.low { color: #ff7868; }
+  #bar { height: 8px; width: 150px; background: rgba(255,255,255,.18); border-radius: 4px; margin-top: 7px; overflow: hidden; }
+  #bar i { display: block; height: 100%; width: 0; background: var(--yellow); border-radius: 4px; }
+  #hud-r { text-align: right; }
+  #alive { font-family: var(--kai); font-size: 20px; font-weight: bold; }
+  #alive b { color: var(--yellow); font-size: 26px; }
+  #lives { font-size: 22px; color: #ff6a5c; letter-spacing: 3px; min-height: 26px; }
+  #lives i { color: rgba(255,255,255,.3); font-style: normal; }
+
+  #banner { position: fixed; left: 0; right: 0; top: 24%; text-align: center; pointer-events: none; font-family: var(--kai); font-weight: bold; font-size: clamp(40px, 8vw, 84px); color: #fff; text-shadow: 0 4px 0 rgba(0,0,0,.35), 0 0 24px rgba(0,0,0,.45); }
+  #banner small { display: block; font-size: .42em; color: var(--yellow); }
+  #banner .pop { display: inline-block; animation: pop .28s cubic-bezier(.2, 1.6, .4, 1); }
+  @keyframes pop { from { transform: scale(.4); opacity: 0; } }
+  #banner .chant { letter-spacing: .12em; color: var(--yellow); }
+  #banner .chant i { font-style: normal; opacity: .22; color: #fff; }
+  #banner .stare { color: #ff5a48; font-size: 1.15em; }
+  #banner .num { font-family: Arial, sans-serif; font-size: 1.5em; color: var(--yellow); }
+
+  #hint { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(30, 44, 37, .78); border: 2px solid rgba(246, 242, 228, .4); border-radius: 999px; padding: 8px 20px; font-size: 15px; pointer-events: none; white-space: nowrap; max-width: 94vw; overflow: hidden; text-overflow: ellipsis; }
+  #hint:empty { display: none; }
+  #mute { position: fixed; bottom: 16px; right: 16px; width: 42px; height: 42px; border-radius: 50%; border: 2px solid rgba(246,242,228,.6); background: rgba(30,44,37,.78); color: var(--chalk); font-size: 18px; cursor: pointer; }
+
+  #card { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(20, 14, 10, .38); }
+  #card.show { display: flex; }
+  .board { width: min(620px, 100%); max-height: 96vh; overflow: auto; background: radial-gradient(ellipse at 30% 20%, #3a5a4a, var(--board) 70%); border: 14px solid var(--wood); border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.55), inset 0 0 50px rgba(0,0,0,.35), 0 0 0 3px #7a5127; padding: 26px 34px 28px; text-align: center; animation: drop .35s cubic-bezier(.2, 1.3, .4, 1); font-family: var(--kai); }
+  @keyframes drop { from { transform: translateY(-30px) scale(.94); opacity: 0; } }
+  #card-tag { display: inline-block; font-size: 18px; color: var(--board); background: var(--yellow); padding: 3px 16px; border-radius: 999px; font-weight: bold; }
+  #card-tag:empty { display: none; }
+  #card-title { font-size: clamp(38px, 7vw, 60px); margin: 12px 0 6px; letter-spacing: .08em; text-shadow: 2px 2px 0 rgba(0,0,0,.25); }
+  #card-body { font-size: 20px; line-height: 1.75; }
+  #card-body ul { text-align: left; margin: 10px auto; padding-left: 1.3em; max-width: 470px; }
+  #card-body li::marker { color: var(--yellow); }
+  #card-body .key { display: inline-block; border: 2px solid var(--chalk); border-radius: 7px; padding: 0 9px; font-size: .8em; margin: 0 2px; font-family: "Microsoft YaHei", sans-serif; line-height: 1.5; }
+  #card-body .sub { color: var(--yellow); }
+  #card-body .ctrl { border-top: 2px dashed rgba(246,242,228,.35); margin-top: 12px; padding-top: 10px; font-size: 18px; }
+  #card-body .big { font-size: 46px; color: var(--yellow); font-weight: bold; font-family: Arial, sans-serif; }
+  #card-btns { margin-top: 18px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  #card-btns button { font-family: var(--kai); font-size: 24px; font-weight: bold; color: var(--board); background: var(--yellow); border: none; border-radius: 12px; padding: 10px 36px; cursor: pointer; box-shadow: 0 5px 0 #b89a2c; transition: transform .08s, box-shadow .08s; }
+  #card-btns button:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #b89a2c; }
+  #card-btns button:active { transform: translateY(4px); box-shadow: 0 1px 0 #b89a2c; }
+  #card-btns button.ghost { background: transparent; color: var(--chalk); border: 2px solid var(--chalk); box-shadow: none; }
+  @media (max-width: 640px) {
+    #hud { padding: 8px; gap: 6px; } #hud > div { padding: 6px 9px; } #round { font-size: 16px; } #info { font-size: 12px; }
+    #hud-c { min-width: 96px; } #bar { width: 96px; } #timer { font-size: 22px; } #alive { font-size: 15px; } #alive b { font-size: 19px; }
+    .board { padding: 18px 16px; border-width: 10px; } #card-body { font-size: 17px; } #hint { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="vignette"></div>
+<div id="hud" class="hide">
+  <div id="hud-l"><div id="round"></div><div id="info"></div></div>
+  <div id="hud-c"><div id="timer">--</div><div id="bar"><i></i></div></div>
+  <div id="hud-r"><div id="alive"></div><div id="lives"></div></div>
+</div>
+<div id="banner"></div>
+<div id="hint"></div>
+<button id="mute" title="静音 (M)">♪</button>
+<div id="card"><div class="board"><div id="card-tag"></div><h1 id="card-title"></h1><div id="card-body"></div><div id="card-btns"></div></div></div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
